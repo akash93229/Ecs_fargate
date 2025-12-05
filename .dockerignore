@@ -2,12 +2,11 @@
 node_modules
 
 dist
-
+.tmp
 .idea
 
 .DS_Store
 Thumbs.db
-
 
 .git
 .gitignore

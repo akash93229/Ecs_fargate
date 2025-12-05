@@ -1,12 +1,12 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache python3 make g++ git
+RUN apk add --no-cache python3 make g++
 
 WORKDIR /myStrapi
 
 COPY package.json package-lock.json* ./
 
-RUN npm install
+RUN npm install && npm install pg
 
 COPY . .
 
