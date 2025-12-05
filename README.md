@@ -144,21 +144,47 @@ npm run start      # Production mode
 npm run build      # Build admin panel
 ```
 
-## 🐳 Docker
+## 🐳 Docker Setup
 
-### Build Docker Image
+### Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| **nginx** | 80 | Reverse proxy (entry point) |
+| **app** | 1337 (internal) | Strapi application |
+| **db** | 5432 | PostgreSQL database |
+
+### Run with Docker Compose
 
 ```bash
-docker build -t strapi-app .
+docker compose up
 ```
 
-### Run Docker Container
+Access admin panel at: **http://localhost** (port 80 via Nginx)
+
+### Architecture
+
+```
+Client → Nginx (port 80) → Strapi (port 1337) → PostgreSQL (port 5432)
+```
+
+### Build Only
 
 ```bash
-docker run -p 1337:1337 strapi-app
+docker compose build
 ```
 
-Access admin panel at: **http://localhost:1337/admin**
+### Stop Services
+
+```bash
+docker compose down
+```
+
+### Remove Volumes (reset database)
+
+```bash
+docker compose down -v
+```
 
 ## 📦 Push to GitHub
 
