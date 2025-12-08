@@ -146,45 +146,92 @@ npm run build      # Build admin panel
 
 ## 🐳 Docker Setup
 
+This project includes a complete Docker setup for containerized deployment with PostgreSQL and Nginx reverse proxy.
+
+### Docker Files
+
+| File | Description |
+|------|-------------|
+| `Dockerfile` | Multi-stage build for Strapi app (Node 20 Alpine) |
+| `docker-compose.yml` | Orchestrates all services |
+| `nginx.conf` | Reverse proxy configuration |
+| `.dockerignore` | Files excluded from Docker build |
+| `Docker.md` | Comprehensive Docker documentation |
+
+### Services Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    myStrapiNetwork                          │
+│                                                             │
+│   ┌─────────┐      ┌─────────┐      ┌─────────┐            │
+│   │  nginx  │─────►│   app   │─────►│   db    │            │
+│   │  :80    │      │  :1337  │      │  :5432  │            │
+│   └─────────┘      └─────────┘      └─────────┘            │
+│        │                                                    │
+└────────┼────────────────────────────────────────────────────┘
+         │
+         ▼
+    External Access (port 80)
+```
+
 ### Services
 
-| Service | Port | Description |
-|---------|------|-------------|
-| **nginx** | 80 | Reverse proxy (entry point) |
-| **app** | 1337 (internal) | Strapi application |
-| **db** | 5432 | PostgreSQL database |
+| Service | Image | Port | Description |
+|---------|-------|------|-------------|
+| **nginx** | nginx:latest | 80 | Reverse proxy (entry point) |
+| **app** | Custom (Dockerfile) | 1337 (internal) | Strapi application |
+| **db** | postgres:15-alpine | 5432 | PostgreSQL database |
 
-### Run with Docker Compose
+### Quick Start with Docker
 
 ```bash
-docker compose up
+# Build and start all services
+docker compose up --build
+
+# Run in background
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+
+# Stop and remove volumes (reset database)
+docker compose down -v
 ```
 
 Access admin panel at: **http://localhost** (port 80 via Nginx)
 
-### Architecture
+### Environment Variables (Docker)
 
-```
-Client → Nginx (port 80) → Strapi (port 1337) → PostgreSQL (port 5432)
-```
+The following environment variables are configured in `docker-compose.yml`:
 
-### Build Only
+| Variable | Service | Description |
+|----------|---------|-------------|
+| `POSTGRES_USER` | db | Database username |
+| `POSTGRES_PASSWORD` | db | Database password |
+| `POSTGRES_DB` | db | Database name |
+| `DATABASE_CLIENT` | app | Database client (postgres) |
+| `DATABASE_HOST` | app | Database host (db) |
+| `DATABASE_PORT` | app | Database port (5432) |
 
-```bash
-docker compose build
-```
+### Nginx Configuration
 
-### Stop Services
+The Nginx reverse proxy:
+- Listens on port 80
+- Forwards all requests to Strapi (port 1337)
+- Handles WebSocket connections for hot reload
 
-```bash
-docker compose down
-```
+### Persistent Data
 
-### Remove Volumes (reset database)
+Database data is persisted using Docker named volumes:
+- `postgres_data` - PostgreSQL data directory
 
-```bash
-docker compose down -v
-```
+### Docker Documentation
+
+For a comprehensive deep-dive into Docker concepts, architecture, and commands, see **[Docker.md](./Docker.md)**
 
 ## 📦 Push to GitHub
 
