@@ -116,8 +116,6 @@ jobs:
         run: |
           EC2_IP="${{ steps.outputs.outputs.ec2_ip }}"
           echo "🔍 Verifying deployment on $EC2_IP..."
-          
-          # SSH and check container status
           ssh -o StrictHostKeyChecking=no -i /tmp/ec2_key.pem ec2-user@$EC2_IP << 'EOF'
             echo "📦 Docker containers:"
             docker ps
