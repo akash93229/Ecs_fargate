@@ -21,7 +21,7 @@ Icon
 ############################
 # Windows
 ############################
-
+terraform
 Thumbs.db
 ehthumbs.db
 Desktop.ini
@@ -30,6 +30,7 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+ec2_actions
 
 
 ############################
@@ -130,8 +131,8 @@ build
 .strapi-updater.json
 .strapi-cloud.json
 # Terraform
-terraform/.terraform/
-terraform/*.tfstate
-terraform/*.tfstate.backup
-terraform/*.tfvars
-terraform/.terraform.lock.hcl
+terraform_fargate/.terraform/
+terraform_fargate/*.tfstate
+terraform_fargate/*.tfstate.backup
+terraform_fargate/*.tfvars
+terraform_fargate/.terraform.lock.hcl
