@@ -16,7 +16,6 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
-  profile = "iamadmin-general"
 }
 
 data "aws_vpc" "default" {

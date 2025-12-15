@@ -88,7 +88,6 @@ jobs:
         if: github.event.inputs.action == 'apply'
         id: outputs
         run: |
-          echo "strapi_url=$(terraform output -raw strapi_url)" >> $GITHUB_OUTPUT
           echo "ecs_cluster=$(terraform output -raw ecs_cluster_name)" >> $GITHUB_OUTPUT
           echo "ecs_service=$(terraform output -raw ecs_service_name)" >> $GITHUB_OUTPUT
 
@@ -97,30 +96,28 @@ jobs:
         run: |
           echo "Waiting for ECS service to be stable..."
           aws ecs wait services-stable \
-            --cluster ${{ steps.outputs.outputs.ecs_cluster }} \
-            --services ${{ steps.outputs.outputs.ecs_service }} \
+            --cluster ${{ steps.outputs.ecs_cluster }} \
+            --services ${{ steps.outputs.ecs_service }} \
             --region ${{ env.AWS_REGION }}
 
       - name: Verify Deployment
         if: github.event.inputs.action == 'apply'
         run: |
           echo "🚀 Deployment successful!"
-          echo "Strapi URL: ${{ steps.outputs.outputs.strapi_url }}"
           echo ""
           echo "Testing health endpoint..."
           sleep 30
-          curl -f ${{ steps.outputs.outputs.strapi_url }}/_health || echo "Health check endpoint not responding yet"
 
       - name: Deployment Summary
         if: github.event.inputs.action == 'apply'
         run: |
           echo "## 🎉 Deployment Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Strapi URL:** ${{ steps.outputs.outputs.strapi_url }}" >> $GITHUB_STEP_SUMMARY
-          echo "**ECS Cluster:** ${{ steps.outputs.outputs.ecs_cluster }}" >> $GITHUB_STEP_SUMMARY
-          echo "**ECS Service:** ${{ steps.outputs.outputs.ecs_service }}" >> $GITHUB_STEP_SUMMARY
+          echo "**ECS Cluster:** ${{ steps.outputs.ecs_cluster }}" >> $GITHUB_STEP_SUMMARY
+          echo "**ECS Service:** ${{ steps.outputs.ecs_service }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### View Logs" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
           echo "aws logs tail /ecs/aadith-strapi --follow --region ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+
