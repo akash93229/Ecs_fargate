@@ -33,7 +33,7 @@ variable "db_password" {
 variable "docker_image" {
   description = "Docker image for Strapi (ECR)"
   type        = string
-  default     = "aadith27/strapi-daily-logs"
+  default     = "strapiakash"
 
 }
 
@@ -41,26 +41,26 @@ variable "app_keys" {
   description = "Strapi APP_KEYS (comma-separated)"
   type        = string
   sensitive   = true
-  default     = "aQrx8CqVWAT0k7ryEogiWg==,t3Lmky21wd/JMJ7WYw92qw==,MOl2ZER1hKfaJu1fLzBhdA==,4mIG873yvbrqN/KFZjtXaQ=="
+  default     = "qEgeCP+GlhE7maTjwudsLg==,ZeYDnL8QLf+PlhjShBhk5A==,nf/Zubk+slEfAXoW2yeIuw==,KL7uv8a2Xs89co9sHWqJYQ=="
 }
 
 variable "api_token_salt" {
   description = "Strapi API_TOKEN_SALT"
   type        = string
   sensitive   = true
-  default     = "AJyNKy+cgMrvSJvSUFUPYg=="
+  default     = "z9FjrDIt2gHqWFO1GKercg=="
 }
 
 variable "admin_jwt_secret" {
   description = "Strapi ADMIN_JWT_SECRET"
   type        = string
   sensitive   = true
-  default     = "uAZKUe3ldI27YASKAAnY2g=="
+  default     = "Lp7UJasFt1qAkWF06Tnl4g=="
 }
 
 variable "jwt_secret" {
   description = "Strapi JWT_SECRET"
   type        = string
   sensitive   = true
-  default     = "fAiAjMekEOI4nDvdMViTng=="
+  default     = "2WRUGinYzPj+3gAg/eGcZg=="
 }

@@ -1,5 +1,5 @@
 resource "aws_security_group" "ecs_tasks_sg" {
-  name        = "aadith-strapi-ecs-tasks-sg"
+  name        = "akash-strapi-ecs-tasks-sg"
   description = "Security group for Strapi ECS tasks"
   vpc_id      = data.aws_vpc.default.id
 
@@ -21,6 +21,6 @@ resource "aws_security_group" "ecs_tasks_sg" {
   }
 
   tags = {
-    Name = "aadith-strapi-ecs-tasks-sg"
+    Name = "akash-strapi-ecs-tasks-sg"
   }
 }

@@ -134,5 +134,5 @@ jobs:
           echo "**ECS Service:** ${{ steps.outputs.ecs_service }}" >> $GITHUB_STEP_SUMMARY
           echo "### View Logs" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "aws logs tail /ecs/aadith-strapi --follow --region ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "aws logs tail /ecs/akash-strapi --follow --region ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
           echo '```'

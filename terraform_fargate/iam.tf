@@ -1,7 +1,7 @@
 
 # ECS Execution Role (for pulling images, writing logs)
 resource "aws_iam_role" "ecs_execution_role" {
-  name = "aadith-strapi-ecs-execution-role"
+  name = "akash-strapi-ecs-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -17,7 +17,7 @@ resource "aws_iam_role" "ecs_execution_role" {
   })
 
   tags = {
-    Name = "aadith-strapi-ecs-execution-role"
+    Name = "akash-strapi-ecs-execution-role"
   }
 }
 
@@ -28,7 +28,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
 
 # Additional policy for ECR access
 resource "aws_iam_role_policy" "ecs_execution_ecr_policy" {
-  name = "aadith-strapi-ecr-access"
+  name = "akash-strapi-ecr-access"
   role = aws_iam_role.ecs_execution_role.id
 
   policy = jsonencode({
@@ -58,7 +58,7 @@ resource "aws_iam_role_policy" "ecs_execution_ecr_policy" {
 
 # ECS Task Role (for application runtime permissions)
 # resource "aws_iam_role" "ecs_task_role" {
-#   name = "aadith-strapi-ecs-task-role"
+#   name = "akash-strapi-ecs-task-role"
 # 
 #   assume_role_policy = jsonencode({
 #     Version = "2012-10-17"
@@ -74,13 +74,13 @@ resource "aws_iam_role_policy" "ecs_execution_ecr_policy" {
 #   })
 # 
 #   tags = {
-#     Name = "aadith-strapi-ecs-task-role"
+#     Name = "akash-strapi-ecs-task-role"
 #   }
 # }
 
 # Add any additional permissions your Strapi app needs here
 # resource "aws_iam_role_policy" "ecs_task_policy" {
-#   name = "aadith-strapi-task-permissions"
+#   name = "akash-strapi-task-permissions"
 #   role = aws_iam_role.ecs_task_role.id
 #
 #   policy = jsonencode({

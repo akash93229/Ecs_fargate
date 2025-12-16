@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "aadithnewbucket"
+    bucket         = "strapiakash"
     key            = "strapi/terraform.tfstate"
     region         = "ap-south-1"
     encrypt        = true

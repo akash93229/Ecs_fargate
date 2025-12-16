@@ -1,14 +1,14 @@
 resource "aws_db_subnet_group" "strapi_db_subnet" {
-  name       = "aadith-strapi-db-subnet-group"
+  name       = "akash-strapi-db-subnet-group"
   subnet_ids = data.aws_subnets.default.ids
 
   tags = {
-    Name = "aadith-strapi-db-subnet-group"
+    Name = "akash-strapi-db-subnet-group"
   }
 }
 
-resource "aws_db_instance" "aadith_strapi_postgres" {
-  identifier             = "aadith-strapi-postgres"
+resource "aws_db_instance" "akash_strapi_postgres" {
+  identifier             = "akash-strapi-postgres"
   engine                 = "postgres"
   engine_version         = "17.6"
   instance_class         = var.db_instance_class
@@ -28,6 +28,6 @@ resource "aws_db_instance" "aadith_strapi_postgres" {
   backup_retention_period = 7
 
   tags = {
-    Name = "aadith-strapi-postgres-rds"
+    Name = "akash-strapi-postgres-rds"
   }
 }

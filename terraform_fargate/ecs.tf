@@ -1,7 +1,7 @@
 
 # ECS Cluster
 resource "aws_ecs_cluster" "strapi_cluster" {
-  name = "aadith-strapi-cluster"
+  name = "akash-strapi-cluster"
 
   # setting {
   #   name  = "containerInsights"
@@ -9,23 +9,23 @@ resource "aws_ecs_cluster" "strapi_cluster" {
   # }
 
   tags = {
-    Name = "aadith-strapi-cluster"
+    Name = "akash-strapi-cluster"
   }
 }
 
 # CloudWatch Log Group
 # resource "aws_cloudwatch_log_group" "strapi_logs" {
-#   name              = "/ecs/aadith-strapi"
+#   name              = "/ecs/akash-strapi"
 #   retention_in_days = 7
 #
 #   tags = {
-#     Name = "aadith-strapi-logs"
+#     Name = "akash-strapi-logs"
 #   }
 # }
 
 # ECS Task Definition
 resource "aws_ecs_task_definition" "strapi_task" {
-  family                   = "aadith-strapi-task"
+  family                   = "akash-strapi-task"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "2048"  # 2 vCPU
@@ -61,11 +61,11 @@ resource "aws_ecs_task_definition" "strapi_task" {
         },
         {
           name  = "DATABASE_HOST"
-          value = aws_db_instance.aadith_strapi_postgres.address
+          value = aws_db_instance.akash_strapi_postgres.address
         },
         {
           name  = "DATABASE_PORT"
-          value = tostring(aws_db_instance.aadith_strapi_postgres.port)
+          value = tostring(aws_db_instance.akash_strapi_postgres.port)
         },
         {
           name  = "DATABASE_NAME"
@@ -125,13 +125,13 @@ resource "aws_ecs_task_definition" "strapi_task" {
   ])
 
   tags = {
-    Name = "aadith-strapi-task"
+    Name = "akash-strapi-task"
   }
 }
 
 # ECS Service
 resource "aws_ecs_service" "strapi_service" {
-  name            = "aadith-strapi-service"
+  name            = "akash-strapi-service"
   cluster         = aws_ecs_cluster.strapi_cluster.id
   task_definition = aws_ecs_task_definition.strapi_task.arn
   desired_count   = 1
@@ -151,11 +151,11 @@ resource "aws_ecs_service" "strapi_service" {
 
   depends_on = [
     # aws_lb_listener.strapi_listener,
-    aws_db_instance.aadith_strapi_postgres
+    aws_db_instance.akash_strapi_postgres
   ]
 
   tags = {
-    Name = "aadith-strapi-service"
+    Name = "akash-strapi-service"
   }
 }
 
@@ -170,7 +170,7 @@ resource "aws_ecs_service" "strapi_service" {
 
 # Auto Scaling Policy - CPU Based
 # resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
-#   name               = "aadith-strapi-cpu-autoscaling"
+#   name               = "akash-strapi-cpu-autoscaling"
 #   policy_type        = "TargetTrackingScaling"
 #   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
 #   scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
@@ -188,7 +188,7 @@ resource "aws_ecs_service" "strapi_service" {
 
 # Auto Scaling Policy - Memory Based
 # resource "aws_appautoscaling_policy" "ecs_memory_policy" {
-#   name               = "aadith-strapi-memory-autoscaling"
+#   name               = "akash-strapi-memory-autoscaling"
 #   policy_type        = "TargetTrackingScaling"
 #   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
 #   scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
