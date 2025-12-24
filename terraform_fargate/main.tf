@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "akash-terraform-state-bucket"
+    bucket         = "ecsakash"
     key            = "strapi/terraform.tfstate"
     region         = "ap-south-1"
     encrypt        = true
