@@ -144,6 +144,7 @@ resource "aws_ecs_service" "strapi_service" {
   depends_on = [
     aws_db_instance.akash_strapi_postgres,
     aws_ecs_cluster_capacity_providers.strapi_spot,
+    aws_lb_listener.strapi_listener
  
   ]
 

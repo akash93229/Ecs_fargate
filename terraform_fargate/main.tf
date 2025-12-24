@@ -28,3 +28,10 @@ data "aws_subnets" "default" {
     values = [data.aws_vpc.default.id]
   }
 }
+locals {
+  subnets = [
+    "subnet-0dcf98e23a5861550",
+    "subnet-0342cfb028d6aff5a"
+  ]
+}
+ 
