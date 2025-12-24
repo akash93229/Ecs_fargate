@@ -20,7 +20,7 @@ output "ecs_service_name" {
 
 output "rds_endpoint" {
   description = "RDS PostgreSQL endpoint"
-  value       = aws_db_instance.aadith_strapi_postgres.endpoint
+  value       = aws_db_instance.akash_strapi_postgres.endpoint
   sensitive   = true
 }
 

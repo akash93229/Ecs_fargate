@@ -1,29 +1,30 @@
-
-# ECS Cluster
+# =========================
+# ECS CLUSTER (Metrics Enabled)
+# =========================
 resource "aws_ecs_cluster" "strapi_cluster" {
   name = "akash-strapi-cluster"
 
-  # setting {
-  #   name  = "containerInsights"
-  #   value = "enabled"
-  # }
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 
   tags = {
     Name = "akash-strapi-cluster"
   }
 }
-
-# CloudWatch Log Group
-# resource "aws_cloudwatch_log_group" "strapi_logs" {
-#   name              = "/ecs/akash-strapi"
-#   retention_in_days = 7
-#
-#   tags = {
-#     Name = "akash-strapi-logs"
-#   }
-# }
-
-# ECS Task Definition
+resource "aws_ecs_cluster_capacity_providers" "strapi_spot" {
+  cluster_name = aws_ecs_cluster.strapi_cluster.name
+ 
+  capacity_providers = ["FARGATE_SPOT"]
+ 
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+  }
+}
+# =========================
+# ECS TASK DEFINITION (CloudWatch Logs Enabled)
+# =========================
 resource "aws_ecs_task_definition" "strapi_task" {
   family                   = "akash-strapi-task"
   network_mode             = "awsvpc"
@@ -31,7 +32,6 @@ resource "aws_ecs_task_definition" "strapi_task" {
   cpu                      = "2048"  # 2 vCPU
   memory                   = "4096"  # 4 GB
   execution_role_arn       = aws_iam_role.ecs_execution_role.arn
-  #task_role_arn            = aws_iam_role.ecs_task_role.arn
 
   container_definitions = jsonencode([
     {
@@ -105,22 +105,15 @@ resource "aws_ecs_task_definition" "strapi_task" {
         }
       ]
 
-      # logConfiguration = {
-      #   logDriver = "awslogs"
-      #   options = {
-      #     "awslogs-group"         = aws_cloudwatch_log_group.strapi_logs.name
-      #     "awslogs-region"        = var.aws_region
-      #     "awslogs-stream-prefix" = "ecs"
-      #   }
-      # }
-
-      # healthCheck = {
-      #   command     = ["CMD-SHELL", "curl -f http://localhost:1337/_health || exit 1"]
-      #   interval    = 30
-      #   timeout     = 5
-      #   retries     = 3
-      #   startPeriod = 60
-      # }
+      # 🔥 CloudWatch Logs Configuration (TASK 8 CORE)
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.strapi.name
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "ecs/strapi"
+        }
+      }
     }
   ])
 
@@ -129,13 +122,18 @@ resource "aws_ecs_task_definition" "strapi_task" {
   }
 }
 
-# ECS Service
+# =========================
+# ECS SERVICE
+# =========================
 resource "aws_ecs_service" "strapi_service" {
   name            = "akash-strapi-service"
   cluster         = aws_ecs_cluster.strapi_cluster.id
   task_definition = aws_ecs_task_definition.strapi_task.arn
   desired_count   = 1
-  launch_type     = "FARGATE"
+  
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+  }
 
   network_configuration {
     subnets          = data.aws_subnets.default.ids
@@ -143,63 +141,13 @@ resource "aws_ecs_service" "strapi_service" {
     assign_public_ip = true
   }
 
-  # load_balancer {
-  #   target_group_arn = aws_lb_target_group.strapi_tg.arn
-  #   container_name   = "strapi"
-  #   container_port   = 1337
-  # }
-
   depends_on = [
-    # aws_lb_listener.strapi_listener,
-    aws_db_instance.akash_strapi_postgres
+    aws_db_instance.akash_strapi_postgres,
+    aws_ecs_cluster_capacity_providers.strapi_spot,
+ 
   ]
 
   tags = {
     Name = "akash-strapi-service"
   }
 }
-
-# Auto Scaling Target
-# resource "aws_appautoscaling_target" "ecs_target" {
-#   max_capacity       = 3
-#   min_capacity       = 1
-#   resource_id        = "service/${aws_ecs_cluster.strapi_cluster.name}/${aws_ecs_service.strapi_service.name}"
-#   scalable_dimension = "ecs:service:DesiredCount"
-#   service_namespace  = "ecs"
-# }
-
-# Auto Scaling Policy - CPU Based
-# resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
-#   name               = "akash-strapi-cpu-autoscaling"
-#   policy_type        = "TargetTrackingScaling"
-#   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
-#   scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
-#   service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
-# 
-#   target_tracking_scaling_policy_configuration {
-#     predefined_metric_specification {
-#       predefined_metric_type = "ECSServiceAverageCPUUtilization"
-#     }
-#     target_value       = 70.0
-#     scale_in_cooldown  = 300
-#     scale_out_cooldown = 60
-#   }
-# }
-
-# Auto Scaling Policy - Memory Based
-# resource "aws_appautoscaling_policy" "ecs_memory_policy" {
-#   name               = "akash-strapi-memory-autoscaling"
-#   policy_type        = "TargetTrackingScaling"
-#   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
-#   scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
-#   service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
-# 
-#   target_tracking_scaling_policy_configuration {
-#     predefined_metric_specification {
-#       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
-#     }
-#     target_value       = 80.0
-#     scale_in_cooldown  = 300
-#     scale_out_cooldown = 60
-#   }
-# }
