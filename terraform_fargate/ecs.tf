@@ -133,6 +133,8 @@ resource "aws_ecs_service" "strapi_service" {
   
   capacity_provider_strategy {
     capacity_provider = "FARGATE_SPOT"
+     weight            = 1 
+      base              = 0
   }
 
   network_configuration {
