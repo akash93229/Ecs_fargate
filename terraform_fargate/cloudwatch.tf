@@ -1,59 +1,235 @@
-# =========================
-# CloudWatch Log Group (ECS Logs)
-# =========================
-resource "aws_cloudwatch_log_group" "strapi" {
-  name              = "/ecs/akash"
-  retention_in_days = 7
+# Alarm: High CPU Utilization
+#Average ECS CPU utilization is greater than 80% for 2 consecutive 5-minute periods
+resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
+  alarm_name          = "akash-strapi-high-cpu"
+  comparison_operator = "GreaterThanThreshold" #when the alarm should trigger.
+  evaluation_periods  = 2  #Number of consecutive periods the condition must be met.
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = 300  # 5 minutes
+  statistic           = "Average"
+  threshold           = 80   # 80% CPU
+  alarm_description   = "This metric monitors ECS CPU utilization"
+
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.strapi_cluster.name
+    ServiceName = aws_ecs_service.strapi_service.name
+  }
 
   tags = {
-    Name = "strapi-ecs-logs"
+    Name        = "akash-strapi-high-cpu-alarm"
+
   }
 }
 
-# =========================
-# CloudWatch Dashboard (OPTIONAL)
-# =========================
-resource "aws_cloudwatch_dashboard" "ecs_dashboard" {
-  dashboard_name = "strapi-ecs-dashboard"
+# Alarm: High Memory Utilization
+resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
+  alarm_name          = "akash-strapi-high-memory"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "MemoryUtilization"
+  namespace           = "AWS/ECS"
+  period              = 300  # 5 minutes
+  statistic           = "Average"
+  threshold           = 85   # 85% Memory
+  alarm_description   = "This metric monitors ECS memory utilization"
+
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.strapi_cluster.name
+    ServiceName = aws_ecs_service.strapi_service.name
+  }
+
+  tags = {
+    Name        = "akash-strapi-high-memory-alarm"
+
+  }
+}
+
+# Alarm: Task Count
+resource "aws_cloudwatch_metric_alarm" "ecs_task_count_low" {
+  alarm_name          = "akash-strapi-no-running-tasks"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "RunningTaskCount"
+  namespace           = "ECS/ContainerInsights"
+  period              = 60   # 1 minute
+  statistic           = "Average"
+  threshold           = 1
+  alarm_description   = "Alert when no tasks are running"
+
+  treat_missing_data  = "breaching"
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.strapi_cluster.name
+    ServiceName = aws_ecs_service.strapi_service.name
+  }
+
+  tags = {
+    Name        = "akash-strapi-task-count-alarm"
+
+  }
+}
+
+resource "aws_cloudwatch_dashboard" "strapi_dashboard" {
+  dashboard_name = "akash-strapi-monitoring"
 
   dashboard_body = jsonencode({
     widgets = [
       {
-        type   = "metric"
-        width  = 12
-        height = 6
+        type = "metric"
         properties = {
           metrics = [
-            ["AWS/ECS", "CPUUtilization", "ServiceName", "akash-strapi-service", "ClusterName", "akash-strapi-cluster"],
-            ["AWS/ECS", "MemoryUtilization", "ServiceName", "akash-strapi-service", "ClusterName", "akash-strapi-cluster"]
+            [
+              "AWS/ECS",
+              "CPUUtilization",
+              "ClusterName",
+              "${aws_ecs_cluster.strapi_cluster.name}",
+              "ServiceName",
+              "${aws_ecs_service.strapi_service.name}",
+              { stat = "Average" }
+            ]
           ]
-          period = 60
-          stat   = "Average"
+          period = 300
           region = var.aws_region
-          title  = "Strapi ECS CPU & Memory Utilization"
+          title  = "ECS CPU Utilization"
+          yAxis = { left = { min = 0, max = 100 } }
         }
+        width  = 12
+        height = 6
+        x      = 0
+        y      = 0
+      },
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            [
+              "AWS/ECS",
+              "MemoryUtilization",
+              "ClusterName",
+              "${aws_ecs_cluster.strapi_cluster.name}",
+              "ServiceName",
+              "${aws_ecs_service.strapi_service.name}",
+              { stat = "Average" }
+            ]
+          ]
+          period = 300
+          region = var.aws_region
+          title  = "ECS Memory Utilization"
+          yAxis = { left = { min = 0, max = 100 } }
+        }
+        width  = 12
+        height = 6
+        x      = 12
+        y      = 0
+      },
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            [
+              "ECS/ContainerInsights",
+              "RunningTaskCount",
+              "ClusterName",
+              "${aws_ecs_cluster.strapi_cluster.name}",
+              "ServiceName",
+              "${aws_ecs_service.strapi_service.name}",
+              { stat = "Average" }
+            ],
+            [
+              "ECS/ContainerInsights",
+              "DesiredTaskCount",
+              "ClusterName",
+              "${aws_ecs_cluster.strapi_cluster.name}",
+              "ServiceName",
+              "${aws_ecs_service.strapi_service.name}",
+              { stat = "Average" }
+            ]
+          ]
+          period = 300
+          region = var.aws_region
+          title  = "Task Count (Running vs Desired)"
+          yAxis = { left = { min = 0 } }
+        }
+        width  = 12
+        height = 6
+        x      = 0
+        y      = 6
+      },
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            [
+              "ECS/ContainerInsights",
+              "NetworkRxBytes",
+              "ClusterName",
+              "${aws_ecs_cluster.strapi_cluster.name}",
+              "ServiceName",
+              "${aws_ecs_service.strapi_service.name}",
+              { stat = "Sum" }
+            ]
+          ]
+          period = 300
+          region = var.aws_region
+          title  = "Network In (Bytes)"
+          yAxis = { left = { min = 0 } }
+        }
+        width  = 12
+        height = 6
+        x      = 12
+        y      = 6
+      },
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            [
+              "ECS/ContainerInsights",
+              "NetworkTxBytes",
+              "ClusterName",
+              "${aws_ecs_cluster.strapi_cluster.name}",
+              "ServiceName",
+              "${aws_ecs_service.strapi_service.name}",
+              { stat = "Sum" }
+            ]
+          ]
+          period = 300
+          region = var.aws_region
+          title  = "Network Out (Bytes)"
+          yAxis = { left = { min = 0 } }
+        }
+        width  = 12
+        height = 6
+        x      = 0
+        y      = 12
+      },
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            [
+              "AWS/ApplicationELB",
+              "TargetResponseTime",
+              "LoadBalancer",
+              "${aws_lb.strapi_alb.arn_suffix}",
+              "TargetGroup",
+              "${aws_lb_target_group.strapi_tg_blue.arn_suffix}",
+              { stat = "Average" }
+            ]
+          ]
+          period = 300
+          region = var.aws_region
+          title  = "ALB Response Time (seconds)"
+          yAxis = { left = { min = 0 } }
+        }
+        width  = 12
+        height = 6
+        x      = 0
+        y      = 18
       }
     ]
   })
-}
-
-# =========================
-# CloudWatch Alarm (OPTIONAL – High CPU)
-# =========================
-resource "aws_cloudwatch_metric_alarm" "high_cpu" {
-  alarm_name          = "strapi-high-cpu"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/ECS"
-  period              = 60
-  statistic           = "Average"
-  threshold           = 80
-
-  dimensions = {
-    ServiceName = "akash-strapi-service"
-    ClusterName = "akash-strapi-cluster"
-  }
-
-  alarm_description = "Triggers when ECS service CPU exceeds 80%"
 }

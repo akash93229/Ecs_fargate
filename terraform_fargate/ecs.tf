@@ -1,11 +1,10 @@
-# =========================
-# ECS CLUSTER (Metrics Enabled)
-# =========================
+#It's a logical grouping of ec2 where your containers will run
+# ECS Cluster
 resource "aws_ecs_cluster" "strapi_cluster" {
   name = "akash-strapi-cluster"
 
   setting {
-    name  = "containerInsights"
+    name  = "containerInsights" # metrics about your containers
     value = "enabled"
   }
 
@@ -13,25 +12,27 @@ resource "aws_ecs_cluster" "strapi_cluster" {
     Name = "akash-strapi-cluster"
   }
 }
-resource "aws_ecs_cluster_capacity_providers" "strapi_spot" {
-  cluster_name = aws_ecs_cluster.strapi_cluster.name
- 
-  capacity_providers = ["FARGATE_SPOT"]
- 
-  default_capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
+
+# CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "strapi_logs" {
+  name              = "/ecs/akashstrapi"
+  retention_in_days = 7
+
+  tags = {
+    Name = "akash-strapi-logs"
   }
 }
-# =========================
-# ECS TASK DEFINITION (CloudWatch Logs Enabled)
-# =========================
+
+#A Task Definition in AWS ECS is basically the blueprint that tells ECS how to run your container.
+# ECS Task Definition
 resource "aws_ecs_task_definition" "strapi_task" {
   family                   = "akash-strapi-task"
   network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "2048"  # 2 vCPU
-  memory                   = "4096"  # 4 GB
+  requires_compatibilities = ["FARGATE"] # launch env
+  cpu                      = "1024"  # 1 vCPU
+  memory                   = "2048"  # 2 GB
   execution_role_arn       = aws_iam_role.ecs_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
 
   container_definitions = jsonencode([
     {
@@ -105,14 +106,20 @@ resource "aws_ecs_task_definition" "strapi_task" {
         }
       ]
 
-      # 🔥 CloudWatch Logs Configuration (TASK 8 CORE)
       logConfiguration = {
-        logDriver = "awslogs"
+        logDriver = "awslogs" #ECS will send stdout / stderr of the container to CloudWatch Logs.
         options = {
-          awslogs-group         = aws_cloudwatch_log_group.strapi.name
-          awslogs-region        = var.aws_region
-          awslogs-stream-prefix = "ecs/strapi"
+          "awslogs-group"         = aws_cloudwatch_log_group.strapi_logs.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "ecs" # ecs/TaskID
         }
+      }
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:1337/_health || exit 1"]
+        interval    = 30
+        timeout     = 10
+        retries     = 3
+        startPeriod = 120
       }
     }
   ])
@@ -122,32 +129,36 @@ resource "aws_ecs_task_definition" "strapi_task" {
   }
 }
 
-# =========================
-# ECS SERVICE
-# =========================
+# An ECS Service ensures a specified number of tasks are running at all times.
+# It launches tasks based on your task definition and keeps that number healthy and steady.
+# ECS Service
+
 resource "aws_ecs_service" "strapi_service" {
   name            = "akash-strapi-service"
   cluster         = aws_ecs_cluster.strapi_cluster.id
   task_definition = aws_ecs_task_definition.strapi_task.arn
   desired_count   = 1
-  
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
-     weight            = 1 
-      base              = 0
+  launch_type = "FARGATE"
+
+
+  deployment_controller {
+    type = "CODE_DEPLOY"
   }
 
   network_configuration {
-    subnets          = data.aws_subnets.default.ids
+    subnets          = local.subnets
     security_groups  = [aws_security_group.ecs_tasks_sg.id]
     assign_public_ip = true
   }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.strapi_tg_blue.arn  # Links to Target Group
+    container_name   = "strapi"                                # Container name from task definition
+    container_port   = 1337                                    # Port Strapi listens on
+  }
 
   depends_on = [
-    aws_db_instance.akash_strapi_postgres,
-    aws_ecs_cluster_capacity_providers.strapi_spot,
-    aws_lb_listener.strapi_listener
- 
+    aws_lb_listener.strapi_listener,
+    aws_db_instance.akash_strapi_postgres
   ]
 
   tags = {

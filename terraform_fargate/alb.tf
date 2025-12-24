@@ -1,3 +1,5 @@
+
+# Application Load Balancer
 resource "aws_lb" "strapi_alb" {
   name               = "akash-strapi-alb"
   internal           = false
@@ -11,6 +13,8 @@ resource "aws_lb" "strapi_alb" {
     Name = "akash-strapi-alb"
   }
 }
+
+# Target Group
 resource "aws_lb_target_group" "strapi_tg_blue" {
   name        = "akash-strapi-tg-blue"
   port        = 1337
@@ -35,6 +39,33 @@ resource "aws_lb_target_group" "strapi_tg_blue" {
     Name = "akash-strapi-tg"
   }
 }
+
+resource "aws_lb_target_group" "strapi_tg_green" {
+  name        = "akash-strapi-tg-green"
+  port        = 1337
+  protocol    = "HTTP"
+  vpc_id      = data.aws_vpc.default.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    path                = "/_health"
+    protocol            = "HTTP"
+    matcher             = "200,204"
+  }
+
+  deregistration_delay = 30
+
+  tags = {
+    Name = "akash-strapi-tg"
+  }
+}
+
+# ALB Listener
 resource "aws_lb_listener" "strapi_listener" {
   load_balancer_arn = aws_lb.strapi_alb.arn
   port              = "80"
