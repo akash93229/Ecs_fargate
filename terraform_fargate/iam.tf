@@ -30,7 +30,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
 
 
 resource "aws_iam_role" "code_deploy_role" {
-  name = "codedeploy-ecs-role"
+  name = "ecsakash_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

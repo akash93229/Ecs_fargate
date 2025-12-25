@@ -139,6 +139,7 @@ resource "aws_ecs_service" "strapi_service" {
   task_definition = aws_ecs_task_definition.strapi_task.arn
   desired_count   = 1
   launch_type = "FARGATE"
+  force_new_deployment = true   # 👈 REQUIRED FIX
 
 
   deployment_controller {
