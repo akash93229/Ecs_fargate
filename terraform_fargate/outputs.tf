@@ -2,6 +2,7 @@ output "ecs_cluster_name" {
   description = "Name of the ECS cluster"
   value       = aws_ecs_cluster.strapi_cluster.name
 }
+
 output "ecs_task_definition_arn" {
   description = "The ARN of the ECS Task Definition"
   value       = aws_ecs_task_definition.strapi_task.arn
@@ -23,9 +24,10 @@ output "cloudwatch_log_group" {
   value       = aws_cloudwatch_log_group.strapi_logs.name
 }
 
+# ⚠️ SAFE OUTPUT (NO STATE DEPENDENCY)
 output "cloudwatch_dashboard_url" {
   description = "URL to CloudWatch Dashboard"
-  value       = "https://console.aws.amazon.com/cloudwatch/home?region=${var.aws_region}#dashboards:name=${aws_cloudwatch_dashboard.strapi_dashboard.dashboard_name}"
+  value       = "https://console.aws.amazon.com/cloudwatch/home?region=${var.aws_region}#dashboards"
 }
 
 output "cloudwatch_logs_url" {
