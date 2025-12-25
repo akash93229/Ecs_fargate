@@ -114,13 +114,7 @@ resource "aws_ecs_task_definition" "strapi_task" {
           "awslogs-stream-prefix" = "ecs" # ecs/TaskID
         }
       }
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:1337/_health || exit 1"]
-        interval    = 30
-        timeout     = 10
-        retries     = 3
-        startPeriod = 120
-      }
+      
     }
   ])
 
