@@ -1,4 +1,3 @@
-
 # Application Load Balancer
 resource "aws_lb" "strapi_alb" {
   name               = "akash-strapi-alb"
@@ -14,7 +13,7 @@ resource "aws_lb" "strapi_alb" {
   }
 }
 
-# Target Group
+# BLUE Target Group (LONG-LIVED)
 resource "aws_lb_target_group" "strapi_tg_blue" {
   name        = "akash-strapi-tg-blue"
   port        = 1337
@@ -35,11 +34,16 @@ resource "aws_lb_target_group" "strapi_tg_blue" {
 
   deregistration_delay = 30
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = {
-    Name = "akash-strapi-tg"
+    Name = "akash-strapi-tg-blue"
   }
 }
 
+# GREEN Target Group (LONG-LIVED)
 resource "aws_lb_target_group" "strapi_tg_green" {
   name        = "akash-strapi-tg-green"
   port        = 1337
@@ -60,15 +64,19 @@ resource "aws_lb_target_group" "strapi_tg_green" {
 
   deregistration_delay = 30
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = {
-    Name = "akash-strapi-tg"
+    Name = "akash-strapi-tg-green"
   }
 }
 
 # ALB Listener
 resource "aws_lb_listener" "strapi_listener" {
   load_balancer_arn = aws_lb.strapi_alb.arn
-  port              = "80"
+  port              = 80
   protocol          = "HTTP"
 
   default_action {
