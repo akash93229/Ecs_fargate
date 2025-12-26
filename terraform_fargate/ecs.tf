@@ -95,15 +95,12 @@ resource "aws_ecs_task_definition" "strapi_task" {
   }
 }
 
-# ==========================
-# ECS SERVICE (BLUE/GREEN)
-# ==========================
 resource "aws_ecs_service" "strapi_service" {
   name    = "akash-strapi-service"
   cluster = aws_ecs_cluster.strapi_cluster.id
 
-  launch_type  = "FARGATE"
   desired_count = 1
+  launch_type   = "FARGATE"
 
   deployment_controller {
     type = "CODE_DEPLOY"
@@ -124,7 +121,8 @@ resource "aws_ecs_service" "strapi_service" {
   lifecycle {
     ignore_changes = [
       task_definition,
-      desired_count
+      desired_count,
+      capacity_provider_strategy
     ]
   }
 
