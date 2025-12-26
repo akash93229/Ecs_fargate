@@ -99,6 +99,9 @@ resource "aws_ecs_service" "strapi_service" {
   name    = "akash-strapi-service"
   cluster = aws_ecs_cluster.strapi_cluster.id
 
+  # REQUIRED ONLY FOR INITIAL CREATION
+  task_definition = aws_ecs_task_definition.strapi_task.arn
+
   desired_count = 1
   launch_type   = "FARGATE"
 
@@ -120,7 +123,7 @@ resource "aws_ecs_service" "strapi_service" {
 
   lifecycle {
     ignore_changes = [
-      task_definition,
+      task_definition,              # future revisions by CodeDeploy
       desired_count,
       capacity_provider_strategy
     ]
