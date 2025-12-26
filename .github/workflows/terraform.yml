@@ -1,5 +1,5 @@
 name: CD - Terraform Deploy to ECS Fargate
-
+ 
 on:
   workflow_dispatch:
     inputs:
@@ -11,12 +11,12 @@ on:
         options:
           - apply
           - destroy
-
+ 
 env:
   AWS_REGION: ap-south-1
   TF_WORKING_DIR: terraform_fargate
   ECR_REPOSITORY: akash-strapi-daily-logs
-
+ 
 jobs:
   terraform:
     name: Terraform ${{ github.event.inputs.action }}
@@ -24,40 +24,40 @@ jobs:
     defaults:
       run:
         working-directory: ${{ env.TF_WORKING_DIR }}
-
+ 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+ 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
+ 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-
+ 
       - name: Get ECR Image URI
         id: ecr-image
         run: |
           IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
           echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
           echo "Using image: $IMAGE_URI"
-
+ 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.9.0
-
+ 
       - name: Terraform Init
         run: terraform init
-
+ 
       - name: Terraform Validate
         run: terraform validate
-
+ 
       - name: Terraform Plan
         id: plan
         run: |
@@ -69,21 +69,20 @@ jobs:
             -var="admin_jwt_secret=${{ secrets.ADMIN_JWT_SECRET }}" \
             -var="jwt_secret=${{ secrets.JWT_SECRET }}" \
             -out=tfplan
-
+ 
       - name: Terraform Apply
         if: github.event.inputs.action == 'apply'
         run: terraform apply -auto-approve tfplan
-
-
+ 
+ 
       - name: Trigger CodeDeploy Deployment
         if: github.event.inputs.action == 'apply'
         run: |
           TASK_DEF_ARN=$(terraform output -raw ecs_task_definition_arn)
-  
             cat > deploy.json <<EOF
             {
-              "applicationName": "strapi-codedeploy-app",
-              "deploymentGroupName": "strapi-ecs-dg",
+              "applicationName": "akash-strapi-codedeploy-app",
+              "deploymentGroupName": "akash-strapi-ecs-dg",
               "revision": {
                 "revisionType": "AppSpecContent",
                 "appSpecContent": {
@@ -92,38 +91,31 @@ jobs:
             }
           }
           EOF
-          
           aws deploy create-deployment \
             --cli-input-json file://deploy.json \
             --region $AWS_REGION
-          
 
+ 
       - name: Monitor CodeDeploy Deployment Status
         if: github.event.inputs.action == 'apply'
         run: |
           echo "Waiting for deployment to start..."
           sleep 10
-          
           # Get the latest deployment ID
           DEPLOYMENT_ID=$(aws deploy list-deployments \
-            --application-name strapi-codedeploy-app \
-            --deployment-group-name strapi-ecs-dg \
+            --application-name akash-strapi-codedeploy-app \
+            --deployment-group-name akash-strapi-ecs-dg \
             --query 'deployments[0]' \
             --output text \
             --region $AWS_REGION)
-          
           echo "Monitoring CodeDeploy Deployment: $DEPLOYMENT_ID"
-          
           # Monitor deployment status
           while true; do
             DEPLOYMENT_INFO=$(aws deploy get-deployment \
               --deployment-id $DEPLOYMENT_ID \
               --region $AWS_REGION)
-          
             STATUS=$(echo $DEPLOYMENT_INFO | jq -r '.deploymentInfo.status')
-          
             echo "Status: $STATUS"
-          
             case $STATUS in
               "Succeeded")
                 echo "Deployment successful!"
@@ -144,7 +136,7 @@ jobs:
                 ;;
             esac
           done
-
+ 
       - name: Terraform Destroy
         if: github.event.inputs.action == 'destroy'
         run: |
@@ -155,17 +147,17 @@ jobs:
             -var="api_token_salt=${{ secrets.API_TOKEN_SALT }}" \
             -var="admin_jwt_secret=${{ secrets.ADMIN_JWT_SECRET }}" \
             -var="jwt_secret=${{ secrets.JWT_SECRET }}"
-
+ 
       - name: Get Terraform Outputs
         if: github.event.inputs.action == 'apply'
         id: outputs
         run: |
           CLUSTER=$(terraform output -raw ecs_cluster_name)
           SERVICE=$(terraform output -raw ecs_service_name)
-
+ 
           echo "CLUSTER=$CLUSTER" >> $GITHUB_ENV
           echo "SERVICE=$SERVICE" >> $GITHUB_ENV
-
+ 
       - name: Verify Deployment
         if: github.event.inputs.action == 'apply'
         run: |
